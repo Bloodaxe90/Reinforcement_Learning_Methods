@@ -115,7 +115,7 @@ class DeepQLearning(Game):
         action_indexes = torch.tensor(action_indexes, dtype=torch.int64)
         current_q_values = self.main_network(torch.cat(current_one_hot_states)).gather(1, action_indexes.unsqueeze(-1)).squeeze(-1)
         rewards = torch.tensor(rewards, dtype=torch.float32)
-        next_q_values = torch.amax(self.target_network(torch.cat([get_one_hot(next_state).unsqueeze(0) for next_state in next_states])).squeeze(0), dim = 1)
+        next_q_values = torch.amax(self.target_network(torch.cat([get_one_hot(state).unsqueeze(0) for state in next_states])), dim = 1)
         terminals = torch.tensor(terminals, dtype= torch.float32)
 
         td_errors = rewards + (
