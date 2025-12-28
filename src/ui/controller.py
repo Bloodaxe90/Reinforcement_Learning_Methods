@@ -233,9 +233,6 @@ class Controller(QObject):
 
         if self.last_env_params == env_params:
 
-            if type(self.game) == game_class and self.last_full_params == full_params:
-                return self.game
-
             transfer_data = {
                 'queue': self.game.environments,
                 'process': self.game.generator_process,
