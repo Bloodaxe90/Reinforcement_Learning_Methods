@@ -1,3 +1,4 @@
+import random
 from cgi import maxlen
 from collections import deque
 from itertools import combinations
@@ -78,9 +79,9 @@ def get_reward_mb(current_state: np.ndarray,
 def get_reward_mf(current_state: np.ndarray,
                 action: str,
                 visited,
-                win_reward: int = 10,
+                win_reward: int = 100,
                 loss_reward: int = 0,
-                intermediate_reward = 7,
+                intermediate_reward = 70,
                 general_reward: int = -1,
                 explore_reward: int = 3) -> int:
 
@@ -118,7 +119,7 @@ def get_next_state_values(current_state: np.ndarray,
         possible_next_state = current_state.copy()
         move(possible_next_state, action)
         possible_next_state_values.append(
-            values.get(get_state_key(possible_next_state), 0)
+            values.get(get_state_key(possible_next_state), random.random())
         )
     return possible_next_state_values
 

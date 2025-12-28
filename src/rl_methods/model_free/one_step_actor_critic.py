@@ -16,20 +16,24 @@ from src.rl_methods.utils import get_one_hot, get_reward_mf
 class OneStepActorCritic(Game):
 
     def __init__(self,
+                 general: bool = False,
                  gamma: float = 0.90,
                  actor_alpha: float = 0.0001,
                  critic_alpha: float = 0.0005,
-                 wins_threshold: int = 0.75,
+                 wins_threshold: float = 0.75,
                  size: int = 5,
                  player_pos: tuple = (),
                  num_food: int = -1,
                  nuke_prob: float = 0.7,
-                 intended_action_prob: float = 0.75, ):
+                 intended_action_prob: float = 0.75,
+                 transfer_state: dict = None,
+                 ):
         super().__init__(size=size,
                          player_pos=player_pos,
                          num_food=num_food,
                          nuke_prob=nuke_prob,
-                         intended_action_prob=intended_action_prob
+                         intended_action_prob=intended_action_prob,
+                         transfer_state=transfer_state
                          )
         self.gamma = gamma
         self.actor_network: CNN = CNN(input_channels= len(Tiles) - 2,
@@ -38,7 +42,7 @@ class OneStepActorCritic(Game):
                                   max_output_channels= 16,
                                   drop_prob= 0.2)
         self.actor_optimizer = torch.optim.Adam(params=self.actor_network.parameters(), lr= actor_alpha)
-        summary(self.actor_network, (1, len(Tiles) - 2, size, size))
+        # summary(self.actor_network, (1, len(Tiles) - 2, size, size))
 
         self.critic_network: CNN = CNN(input_channels=len(Tiles) - 2,
                                       output_neurons=1,
@@ -46,17 +50,18 @@ class OneStepActorCritic(Game):
                                       max_output_channels=16,
                                       drop_prob=0.2)
         self.critic_optimizer = torch.optim.Adam(params=self.critic_network.parameters(), lr= critic_alpha)
-        summary(self.critic_network, (1, len(Tiles) - 2, size, size))
+        # summary(self.critic_network, (1, len(Tiles) - 2, size, size))
         self.wins_threshold = wins_threshold
+        self.general = general
 
     def train(self):
-        print(f"TRAINING BEGUN")
+        print(f"TRAINING BEGUN, general: {self.general}")
         outcomes = deque(maxlen=100)
         self.actor_network.train()
         self.critic_network.train()
         i = 1
         while True:
-            state = self.environment.copy()
+            state = self.environments.get() if self.general else self.environment.copy()
             visited = {state.tobytes()}
             while (outcome:= is_terminal(state)) == "":
                 experience = self.play_step(state, visited)
@@ -71,7 +76,6 @@ class OneStepActorCritic(Game):
             print(f"Iteration {i}, {outcome}, percent {win_rate}")
 
             i += 1
-            self.environment = self.environments.get()
 
     def play_step(self, state: np.ndarray, visited: set) -> tuple[torch.Tensor, int, torch.Tensor, torch.Tensor]:
         one_hot_state = get_one_hot(state)
@@ -113,10 +117,10 @@ class OneStepActorCritic(Game):
         actor_loss.backward()
         self.actor_optimizer.step()
 
-    def play(self):
+    def play(self, controller = None):
         self.actor_network.eval()
         with torch.inference_mode():
-            super().play()
+            super().play(controller)
 
     def get_action(self) -> str:
         logits = self.actor_network(get_one_hot(self.environment).unsqueeze(0)).squeeze()

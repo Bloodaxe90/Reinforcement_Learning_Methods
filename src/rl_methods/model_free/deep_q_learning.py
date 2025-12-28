@@ -7,15 +7,15 @@ from torchinfo import summary
 
 from src.game.game import Game
 from src.game.game_rules import is_terminal, move_with_chance, \
-    get_valid_action_indexes
+    get_valid_action_indexes, get_tile_pos
 from src.game.tiles import Tiles
 from src.models.cnn import CNN
 from src.rl_methods.utils import get_one_hot, get_reward_mf
 
-
 class DeepQLearning(Game):
 
     def __init__(self,
+                 general: bool = False,
                  batch_size: int = 32,
                  replay_capacity: int = 100,
                  main_update_freq: int = 1,
@@ -24,17 +24,20 @@ class DeepQLearning(Game):
                  max_epsilon: float = 0.25,
                  gamma: float = 0.90,
                  alpha: float = 0.0001,
-                 wins_threshold: int = 0.75,
+                 wins_threshold: float = 0.75,
                  size: int = 5,
                  player_pos: tuple = (),
                  num_food: int = -1,
                  nuke_prob: float = 0.7,
-                 intended_action_prob: float = 0.75, ):
+                 intended_action_prob: float = 0.75,
+                 transfer_state: dict = None,
+                 ):
         super().__init__(size=size,
                          player_pos=player_pos,
                          num_food=num_food,
                          nuke_prob=nuke_prob,
-                         intended_action_prob=intended_action_prob
+                         intended_action_prob=intended_action_prob,
+                         transfer_state=transfer_state
                          )
         self.gamma = gamma
         self.main_network: CNN = CNN(input_channels=len(Tiles) - 2,
@@ -44,7 +47,7 @@ class DeepQLearning(Game):
                                      drop_prob=0.2)
         self.optimizer = torch.optim.Adam(
             params=self.main_network.parameters(), lr=alpha)
-        summary(self.main_network, (1, len(Tiles) - 2, size, size))
+        # summary(self.main_network, (1, len(Tiles) - 2, size, size))
 
         # Must have same architecture as main_network
         self.target_network: CNN = CNN(input_channels=len(Tiles) - 2,
@@ -53,6 +56,7 @@ class DeepQLearning(Game):
                                        max_output_channels=16,
                                        drop_prob=0.2)
         assert replay_capacity >= batch_size, "Replay Buffer max capacity must be greater than or equal to batch size"
+        self.general = general
         self.replay_buffer = deque(maxlen=replay_capacity)
         self.wins_threshold = wins_threshold
         self.batch_size = batch_size
@@ -63,14 +67,14 @@ class DeepQLearning(Game):
         self.epsilon = max_epsilon
 
     def train(self):
-        print(f"TRAINING BEGUN")
+        print(f"TRAINING BEGUN, general: {self.general}")
         outcomes = deque(maxlen=100)
         self.main_network.train()
         self.epsilon = self.max_epsilon
         self.replay_buffer.clear()
         i = 1
         while True:
-            state = self.environment.copy()
+            state = self.environments.get() if self.general else self.environment.copy()
             visited = {state.tobytes()}
             while (outcome := is_terminal(state)) == "":
                 self.play_step(state, visited)
@@ -90,8 +94,6 @@ class DeepQLearning(Game):
             print(f"Iteration {i}, {outcome}, percent {win_rate}, epsilon {self.epsilon}")
 
             i += 1
-            self.environment = self.environments.get()
-
 
     def play_step(self, state: np.ndarray, visited: set):
         current_one_hot_state = get_one_hot(state).unsqueeze(0)
@@ -148,10 +150,10 @@ class DeepQLearning(Game):
                     self.max_epsilon - self.min_epsilon) * decay_factor
         self.epsilon = max(self.min_epsilon, self.epsilon)
 
-    def play(self):
+    def play(self, controller = None):
         self.main_network.eval()
         with torch.inference_mode():
-            super().play()
+            super().play(controller)
 
     def get_action(self) -> str:
         return self.get_best_action(

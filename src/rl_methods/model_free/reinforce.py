@@ -11,31 +11,34 @@ from src.rl_methods.utils import get_one_hot, get_reward_mb, get_reward_mf
 import torch
 from torchinfo import summary
 
-
-
 class REINFORCE(Game):
 
     def __init__(self,
+                 general: bool = False,
                  gamma: float = 0.9,
                  alpha: float = 0.0001,
-                 wins_threshold: int = 0.75,
+                 wins_threshold: float = 0.75,
                  size: int = 5,
                  player_pos: tuple = (),
                  num_food: int = -1,
                  nuke_prob: float = 0.7,
-                 intended_action_prob: float = 0.75, ):
+                 intended_action_prob: float = 0.75,
+                 transfer_state: dict = None,
+                 ):
         super().__init__(size=size,
                          player_pos=player_pos,
                          num_food=num_food,
                          nuke_prob=nuke_prob,
-                         intended_action_prob=intended_action_prob
+                         intended_action_prob=intended_action_prob,
+                         transfer_state=transfer_state
                          )
         self.policy_network: CNN = CNN(input_channels= len(Tiles) - 2,
                                   output_neurons= len(self.actions),
                                   state_size= size,
                                   max_output_channels= 16,
                                   drop_prob= 0.2)
-        summary(self.policy_network, (1, len(Tiles) - 2, size, size))
+        # summary(self.policy_network, (1, len(Tiles) - 2, size, size))
+        self.general = general
         self.gamma = gamma
         self.optimizer = torch.optim.Adam(params=self.policy_network.parameters(), lr= alpha)
         self.wins_threshold = wins_threshold
@@ -43,11 +46,11 @@ class REINFORCE(Game):
 
 
     def train(self):
-        print(f"TRAINING BEGUN")
+        print(f"TRAINING BEGUN, general: {self.general}")
         self.policy_network.train()
         i = 1
         while True:
-            state = self.environment.copy()
+            state = self.environments.get() if self.general else self.environment.copy()
             rewards = []
             action_probs = []
             visited = {state.tobytes()}
@@ -64,8 +67,6 @@ class REINFORCE(Game):
             print(f"Iteration {i}, {outcome}, percent {win_rate}")
 
             i += 1
-            self.environment = self.environments.get()
-
 
     def play_step(self, state: np.ndarray, action_probs: list, rewards: list, visited: set):
         one_hot_state = get_one_hot(state)
@@ -104,10 +105,10 @@ class REINFORCE(Game):
         self.optimizer.step()
 
 
-    def play(self):
+    def play(self, controller = None):
         self.policy_network.eval()
         with torch.inference_mode():
-            super().play()
+            super().play(controller)
 
     def get_action(self) -> str:
         logits = self.policy_network(get_one_hot(self.environment).unsqueeze(0)).squeeze()

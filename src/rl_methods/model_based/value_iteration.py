@@ -14,18 +14,20 @@ class ValueIteration(Game):
                  player_pos: tuple = (),
                  num_food: int = -1,
                  nuke_prob: float = 0.7,
-                 intended_action_prob: float = 0.75, ):
+                 intended_action_prob: float = 1,
+                 transfer_state: dict = None,
+                 ):
         super().__init__(size=size,
                          player_pos=player_pos,
                          num_food=num_food,
                          nuke_prob=nuke_prob,
-                         intended_action_prob=intended_action_prob
+                         intended_action_prob=intended_action_prob,
+                         transfer_state=transfer_state
                          )
         self.values = {}
         self.gamma: float = gamma
         self.epsilon: float = epsilon
         self.intended_action_prob: float = intended_action_prob
-        self.states = get_states(self.environment)
 
 
     def train(self):
