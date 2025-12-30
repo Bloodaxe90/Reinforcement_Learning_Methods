@@ -1146,7 +1146,7 @@ QRadioButton::indicator:checked {
      <number>4</number>
     </property>
     <property name="value">
-     <double>0.000100000000000</double>
+     <double>0.001000000000000</double>
     </property>
    </widget>
    <widget class="QLabel" name="epsilon_label_3">
