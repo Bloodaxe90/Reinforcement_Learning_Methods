@@ -1121,7 +1121,7 @@ QRadioButton::indicator:checked {
      <number>4</number>
     </property>
     <property name="value">
-     <double>0.250000000000000</double>
+     <double>0.100000000000000</double>
     </property>
    </widget>
    <widget class="QDoubleSpinBox" name="epsilon_min_dspin">

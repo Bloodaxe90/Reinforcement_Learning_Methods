@@ -1,9 +1,12 @@
+import math
 import random
 from collections import deque
 
 import numpy as np
+import pandas as pd
 import torch
 from torchinfo import summary
+from matplotlib import pyplot as plt
 
 from src.game.game import Game
 from src.game.game_rules import is_terminal, move_with_chance, \
@@ -149,6 +152,20 @@ class DeepQLearning(Game):
         self.epsilon = self.max_epsilon - (
                     self.max_epsilon - self.min_epsilon) * decay_factor
         self.epsilon = max(self.min_epsilon, self.epsilon)
+    #
+    # def decay_epsilon(self, win_rate: float, power: float = 0.5):
+    #     progress = min(1.0, win_rate / self.wins_threshold)
+    #
+    #     decay_factor = 1.0 - (progress ** power)
+    #
+    #     self.epsilon = self.min_epsilon + (
+    #                 self.max_epsilon - self.min_epsilon) * decay_factor
+
+    # def decay_epsilon(self, episode: int, cycle_length: int = 2000):
+    #     radians = 2 * math.pi * (episode / cycle_length)
+    #     wave_height = 0.5 * (1 + math.cos(radians))
+    #     self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * wave_height
+
 
     def play(self, controller = None):
         self.main_network.eval()

@@ -1,13 +1,11 @@
 from collections import deque
-from multiprocessing import Queue, Process
 
 import numpy as np
 import torch
-from torchinfo import summary
 
 from src.game.game import Game
 from src.game.game_rules import is_terminal, move_with_chance, \
-    get_valid_action_indexes, generate_environment
+    get_valid_action_indexes
 from src.game.tiles import Tiles
 from src.models.cnn import CNN
 from src.rl_methods.utils import get_one_hot, get_reward_mf

@@ -7,9 +7,8 @@ from src.game.game_rules import move_with_chance, is_terminal, \
     get_valid_action_indexes
 from src.game.tiles import Tiles
 from src.models.cnn import CNN
-from src.rl_methods.utils import get_one_hot, get_reward_mb, get_reward_mf
+from src.rl_methods.utils import get_one_hot, get_reward_mf
 import torch
-from torchinfo import summary
 
 class REINFORCE(Game):
 
@@ -42,11 +41,11 @@ class REINFORCE(Game):
         self.gamma = gamma
         self.optimizer = torch.optim.Adam(params=self.policy_network.parameters(), lr= alpha)
         self.wins_threshold = wins_threshold
-        self.outcomes = deque(maxlen=100)
 
 
     def train(self):
         print(f"TRAINING BEGUN, general: {self.general}")
+        outcomes = deque(maxlen=100)
         self.policy_network.train()
         i = 1
         while True:
@@ -59,9 +58,9 @@ class REINFORCE(Game):
 
             self.update_network(action_probs, rewards)
 
-            self.outcomes.append(1 if outcome == "WIN" else 0)
-            win_rate = np.mean(self.outcomes)
-            if len(self.outcomes) >= self.outcomes.maxlen and win_rate >= self.wins_threshold:
+            outcomes.append(1 if outcome == "WIN" else 0)
+            win_rate = np.mean(outcomes)
+            if len(outcomes) >= outcomes.maxlen and win_rate >= self.wins_threshold:
                 print(f"Convergence criteria met after {i} iterations\nTRAINING FINISHED\n")
                 break
             print(f"Iteration {i}, {outcome}, percent {win_rate}")

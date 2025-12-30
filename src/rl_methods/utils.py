@@ -1,16 +1,11 @@
 import random
-from cgi import maxlen
-from collections import deque
 from itertools import combinations
-
 import numpy as np
 import torch
-from torch import nn
 
 from src.game.game_rules import get_tile_pos, move, place_player, is_loss, \
     is_win
 from src.game.tiles import Tiles
-
 
 def get_states(environment: np.ndarray) -> list:
     states: list = []
