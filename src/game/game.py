@@ -5,7 +5,7 @@ import numpy as np
 from PySide6.QtWidgets import QApplication
 
 from src.game.game_rules import generate_environment, is_terminal, \
-    move_with_chance
+    move_with_chance, get_tile_pos
 from src.game.tiles import Tiles
 
 
@@ -48,6 +48,7 @@ class Game:
     def play(self, controller = None):
         if controller is None:
             print(f"Initial Environment: \n {self.get_styled_environment()}\n")
+        max_steps = ((self.size * self.size) - len(get_tile_pos(self.environment, Tiles.NUKE))) * self.num_food
 
         i = 0
         while (result := is_terminal(self.environment)) == "":
@@ -61,6 +62,10 @@ class Game:
             else:
                 print(f"{i}.\n{self.get_styled_environment()}")
                 print(("Intended Move" if is_intended_action else "Unintended Move") + "\n")
+
+            if i > max_steps:
+                result = "Timeout"
+                break
 
         if controller is not None:
             controller.game_over(result)

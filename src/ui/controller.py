@@ -285,7 +285,7 @@ class Controller(QObject):
         if result == "WIN":
             self.terminal_label.setStyleSheet(
                 "color: green;")
-        elif result == "LOSE":
+        else:
             self.terminal_label.setStyleSheet(
                 "color: red;")
         self.terminal_label.setText(result)
