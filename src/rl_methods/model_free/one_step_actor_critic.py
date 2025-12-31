@@ -87,9 +87,15 @@ class OneStepActorCritic(Game):
         action_index = torch.multinomial(y_pred, 1).item()
         action = self.actions[action_index]
 
-        reward = get_reward_mf(state, action, visited)
+        reward = get_reward_mf(current_state=state,
+                               action=action,
+                               visited=visited,
+                               win_reward=10,
+                               loss_reward=-1,
+                               intermediate_reward=7,
+                               general_reward=-1,
+                               explore_reward=3)
         action_prob = y_pred[action_index]
-
         move_with_chance(state, action, self.actions,
                          self.intended_action_prob)
         visited.add(state.tobytes())

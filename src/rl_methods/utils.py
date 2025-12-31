@@ -73,10 +73,10 @@ def get_reward_mb(current_state: np.ndarray,
 
 def get_reward_mf(current_state: np.ndarray,
                 action: str,
-                visited,
-                win_reward: int = 100,
-                loss_reward: int = 0,
-                intermediate_reward = 70,
+                visited: set,
+                win_reward: int = 10,
+                loss_reward: int = -1,
+                intermediate_reward = 7,
                 general_reward: int = -1,
                 explore_reward: int = 3) -> int:
 

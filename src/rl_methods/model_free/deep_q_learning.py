@@ -104,7 +104,14 @@ class DeepQLearning(Game):
             0)
         valid_action_indexes = get_valid_action_indexes(state, self.actions)
         action = self.get_best_action(q_values, valid_action_indexes) if random.random() >= self.epsilon else self.actions[random.choice(valid_action_indexes)]
-        reward = get_reward_mf(state, action, visited)
+        reward = get_reward_mf(current_state=state,
+                               action=action,
+                               visited=visited,
+                               win_reward=10,
+                               loss_reward=-10,
+                               intermediate_reward=1,
+                               general_reward=-1,
+                               explore_reward=0)
         move_with_chance(state, action, self.actions,
                          self.intended_action_prob)
         visited.add(state.tobytes())
